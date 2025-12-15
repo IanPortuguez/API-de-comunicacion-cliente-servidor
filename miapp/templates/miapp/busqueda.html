@@ -1,56 +1,152 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <!-- 
+    Metadatos básicos del documento.
+    Basic document metadata.
+  -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <!-- 
+    Título de la página.
+    Page title.
+  -->
   <title>Relational search</title>
-  <!-- Bootstrap CDN rápido -->
+
+  <!-- 
+    Bootstrap CSS desde CDN para estilos rápidos y consistentes.
+    Bootstrap CSS from CDN for fast and consistent styling.
+  -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body class="bg-light">
+  <!-- 
+    Contenedor principal de la vista.
+    Main container for the view.
+  -->
   <div class="container py-5">
+
+    <!-- 
+      Encabezado principal de la página.
+      Main page heading.
+    -->
     <h1 class="mb-4">Buscar por código de factura</h1>
 
+    <!-- 
+      Formulario de búsqueda por código QR/factura.
+      Search form by QR/invoice code.
+    -->
     <form method="get" action="{% url 'buscar-qr' %}" class="mb-4">
       <div class="input-group">
-        <input name="qr" type="search" class="form-control" placeholder="Ingresa el código de factura" value="{{ query|default:'' }}" required>
+
+        <!-- 
+          Campo de entrada para el código QR.
+          Input field for QR code.
+        -->
+        <input
+          name="qr"
+          type="search"
+          class="form-control"
+          placeholder="Ingresa el código de factura"
+          value="{{ query|default:'' }}"
+          required
+        >
+
+        <!-- 
+          Botón de envío del formulario.
+          Form submit button.
+        -->
         <button class="btn btn-primary" type="submit">Buscar</button>
       </div>
     </form>
 
+    <!-- 
+      Mensaje de advertencia cuando no se encuentra el QR.
+      Warning message when the QR is not found.
+    -->
     {% if query and not found %}
-      <div class="alert alert-warning">No se encontró ningún registro con "{{ query }}".</div>
+      <div class="alert alert-warning">
+        No se encontró ningún registro con "{{ query }}".
+      </div>
     {% endif %}
 
+    <!-- 
+      RESULTADO PRINCIPAL
+      MAIN RESULT SECTION
+    -->
     {% if submission %}
-      <div class="card mb-4">
+      <div class="card mb-4 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">Código de factura: {{ submission.qr }}</h5>
-          <p class="card-text"><strong>Usuario:</strong> {{ submission.user }}</p>
-          <p><strong>Huella tomada:</strong> {{ submission.fingerprint_taken }}</p>
-          <p><strong>Huella :</strong></p>
-          <pre>{{ submission.fingerprint_binary|safe }}</pre>
-          <p><strong>Creado:</strong> {{ submission.created_at }}</p>
 
+          <!-- 
+            Información básica de la submission.
+            Basic submission information.
+          -->
+          <h5 class="card-title">
+            Código: <strong>{{ submission.qr }}</strong>
+          </h5>
+
+          <p><strong>Usuario registrado:</strong> {{ submission.registered_user }}</p>
+          <p><strong>Usuario:</strong> {{ submission.user }}</p>
+          <p><strong>Fecha de creación:</strong> {{ submission.created_at }}</p>
+
+          <!-- 
+            Sección de notas asociadas a la submission.
+            Notes section associated with the submission.
+          -->
           <h6 class="mt-3">Notas</h6>
+
           {% if submission.notes %}
-            <pre>{{ submission.notes|safe }}</pre>
+            <pre class="bg-light p-3 border rounded">
+{{ submission.notes|safe }}
+            </pre>
           {% else %}
-            <p class="text-muted">Sin notas</p>
+            <p class="text-muted">Sin notas.</p>
           {% endif %}
         </div>
       </div>
 
+      <!-- 
+        SECCIÓN DE FOTOS
+        PHOTOS SECTION
+      -->
       <div class="mb-4">
-        <h4>Fotos</h4>
+        <h4 class="mb-3">Fotos</h4>
+
         <div class="row">
           {% for foto in photos %}
-            <div class="col-6 col-md-3 mb-3">
-              <div class="card">
-                <img src="{{ foto.file.url }}" class="card-img-top" alt="Foto {{ forloop.counter }}">
-                <div class="card-body">
-                  <p class="mb-0">Lat: {{ foto.latitude }}</p>
-                  <p class="mb-0">Lon: {{ foto.longitude }}</p>
+            <div class="col-6 col-md-3 mb-4">
+              <div class="card shadow-sm">
+
+                <!-- 
+                  Imagen asociada a la submission.
+                  Image associated with the submission.
+                -->
+                {% if foto.url %}
+                  <img src="{{ foto.url }}" class="card-img-top" alt="Foto {{ forloop.counter }}">
+                {% else %}
+                  <div class="card-img-top text-center py-5 bg-secondary text-white">
+                    Sin imagen
+                  </div>
+                {% endif %}
+
+                <!-- 
+                  Metadatos de la foto.
+                  Photo metadata.
+                -->
+                <div class="card-body small">
+                  <p class="mb-1"><strong>Lat:</strong> {{ foto.latitude }}</p>
+                  <p class="mb-1"><strong>Lon:</strong> {{ foto.longitude }}</p>
+                  <p class="mb-1">
+                    <strong>Fecha:</strong>
+                    {% if foto.timestamp %}
+                      {{ foto.timestamp }}
+                    {% else %}
+                      <span class="text-muted">Sin timestamp</span>
+                    {% endif %}
+                  </p>
                 </div>
               </div>
             </div>
@@ -60,26 +156,61 @@
         </div>
       </div>
 
+      <!-- 
+        SECCIÓN DE AUDIOS
+        AUDIOS SECTION
+      -->
       <div class="mb-4">
-        <h4>Audios</h4>
+        <h4 class="mb-3">Audios</h4>
+
         {% for audio in audios %}
-          <div class="mb-2">
-            <audio controls src="{{ audio.file.url }}"></audio>
-            <div class="small text-muted">Fecha: {{ audio.date }}</div>
+          <div class="card mb-3 p-3 shadow-sm">
+
+            <!-- 
+              Reproductor de audio si el archivo existe.
+              Audio player if the file exists.
+            -->
+            {% if audio.url %}
+              <audio controls src="{{ audio.url }}" class="w-100 mb-2"></audio>
+            {% else %}
+              <p class="text-muted">Archivo de audio no disponible</p>
+            {% endif %}
+
+            <div class="small">
+              <strong>Fecha:</strong> {{ audio.date }}
+            </div>
           </div>
         {% empty %}
           <p class="text-muted">No hay audios.</p>
         {% endfor %}
       </div>
 
+      <!-- 
+        SECCIÓN DE RUTA
+        ROUTE SECTION
+      -->
       <div class="mb-4">
-        <h4>Ruta</h4>
+        <h4 class="mb-3">Ruta</h4>
+
         {% if route %}
-          <ul>
-            {% for punto in route %}
-              <li>Lat: {{ punto.lat }}, Lon: {{ punto.lon }}</li>
-            {% endfor %}
-          </ul>
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Latitud</th>
+                <th>Longitud</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for punto in route %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ punto.lat }}</td>
+                  <td>{{ punto.lon }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         {% else %}
           <p class="text-muted">No hay puntos de ruta.</p>
         {% endif %}
