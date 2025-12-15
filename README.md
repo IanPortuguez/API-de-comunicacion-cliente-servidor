@@ -6,7 +6,6 @@
   <img alt="Version" src="https://img.shields.io/badge/%20v1.0.0-STATUS?style=flat&label=Version&labelColor=gray&color=blue">
 </p>
 
----
 
 This API, built with **Django Rest Framework**, **converts JSON files into Python objects**, stores them as relational database models, and provides endpoints for efficient data querying.
 
